@@ -1,0 +1,11 @@
+name: mynotify
+description: my notify settings
+package: AAMID
+type: module
+core: 8.x
+version: 1.0
+dependencies:
+  - telephone
+  - token
+  - commerce
+

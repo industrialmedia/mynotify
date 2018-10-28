@@ -1,0 +1,11 @@
+view mynotify entity:
+  title: 'View mynotify entity'
+add mynotify entity:
+  title: 'Add mynotify entity'
+edit mynotify entity:
+  title: 'Edit mynotify Entity'
+delete mynotify entity:
+  title: 'Delete mynotify entity'
+administer mynotify entity:
+  title: 'Administer mynotify entity'
+  restrict access: TRUE

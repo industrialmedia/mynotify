@@ -1,0 +1,22 @@
+entity.mynotify.admin_settings:
+  route_name: entity.mynotify.admin_settings
+  title: 'Настроки'
+  base_route: entity.mynotify.collection
+  weight: 100
+
+
+entity.mynotify.collection:
+  route_name: entity.mynotify.collection
+  title: 'Notifies'
+  base_route: entity.mynotify.collection
+
+mynotify.page_edit:
+  route_name: entity.mynotify.edit_form
+  base_route: entity.mynotify.edit_form
+  title: Edit
+
+mynotify.delete_confirm:
+  route_name:  entity.mynotify.delete_form
+  base_route:  entity.mynotify.edit_form
+  title: Delete
+  weight: 10

@@ -1,0 +1,7 @@
+entity.mynotify.collection:
+  title: Notifies
+  route_name: entity.mynotify.collection
+  parent: system.admin_content
+  description: 'List notifies.'
+  weight: 100
+

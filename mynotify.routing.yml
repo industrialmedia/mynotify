@@ -1,0 +1,67 @@
+
+entity.mynotify.admin_settings:
+  path: '/admin/content/mynotify/settings'
+  defaults:
+    _form: '\Drupal\mynotify\Form\MynotifySettingsForm'
+    _title: 'Settings notify'
+  requirements:
+    _permission: 'administer mynotify entity'
+
+
+
+
+entity.mynotify.view:
+  path: '/notify/{commerce_product}'
+  defaults:
+    _controller: '\Drupal\mynotify\Controller\MynotifyController::viewPage'
+    _title_callback: '\Drupal\mynotify\Controller\MynotifyController::viewPageTitle'
+  requirements:
+    _permission: 'access content'
+
+
+
+
+entity.mynotify.collection:
+  path: '/admin/content/mynotify'
+  defaults:
+    _entity_list: 'mynotify'
+    _title: 'Mynotify List'
+  requirements:
+    _permission: 'administer mynotify entity'
+
+
+mynotify.mynotify_add:
+  path: '/admin/content/mynotify/add'
+  defaults:
+    _entity_form: mynotify.add
+    _title: 'Add notifies'
+  requirements:
+    _entity_create_access: 'mynotify'
+
+
+
+
+entity.mynotify.canonical:
+  path: '/admin/content/mynotify/{mynotify}/edit'
+  defaults:
+    _entity_form: mynotify.edit
+    _title: 'Edit notifies'
+  requirements:
+    _entity_access: 'mynotify.edit'
+
+entity.mynotify.edit_form:
+  path: '/admin/content/mynotify/{mynotify}/edit'
+  defaults:
+    _entity_form: mynotify.edit
+    _title: 'Edit notifies'
+  requirements:
+    _entity_access: 'mynotify.edit'
+
+entity.mynotify.delete_form:
+  path: '/admin/content/mynotify/{mynotify}/delete'
+  defaults:
+    _entity_form: mynotify.delete
+    _title: 'Delete notifies'
+  requirements:
+    _entity_access: 'mynotify.delete'
+

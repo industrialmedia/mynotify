@@ -1,0 +1,173 @@
+<?php
+
+use Drupal\Component\Render\PlainTextOutput;
+use Drupal\commerce_cart\Form\AddToCartFormInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\Component\Serialization\Json;
+use Drupal\commerce_product\Entity\Product;
+use Drupal\user\Entity\User;
+
+
+/**
+ * Implements hook_form_alter().
+ *
+ * @param $form
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ * @param $form_id
+ */
+function mynotify_form_alter(&$form, FormStateInterface &$form_state, $form_id) {
+  if ($form_state->getBuildInfo()['callback_object'] instanceof AddToCartFormInterface) {
+    /* @var Product $product  */
+    $product = $form_state->getStorage()['product'];
+    $product_variations = $product->getVariations();
+    $product_variation = $product_variations[0];
+    $qty = $product_variation->field_qty->getValue();
+    if (!(isset($qty[0]['value']) && $qty[0]['value'] > 0)) {
+      $settings_config = \Drupal::config('mynotify.settings');
+      $form['actions']['submit'] = [
+        '#type' => 'link',
+        '#title' => $settings_config->get('popup.button_name'),
+        '#url' => Url::fromRoute('entity.mynotify.view', ['commerce_product' => $product->id()]),
+        '#options' => [
+          'attributes' => [
+            'class' => ['use-ajax'],
+            'data-dialog-type' => 'modal',
+            'data-dialog-options' => $settings_config->get('popup.dialog_options'),
+          ]
+        ],
+        '#attached' => ['library' => ['core/drupal.dialog.ajax']],
+      ];
+      $dialog_options = $settings_config->get('popup.dialog_options');
+      $dialog_options = Json::decode($dialog_options);
+      foreach ($dialog_options as $dialog_option_name => $dialog_option) {
+        if (in_array($dialog_option_name, ['show', 'hide'])) {
+          foreach ($dialog_option as $name => $value) {
+            if ($name == 'effect') {
+              $form['actions']['submit']['#attached']['library'][] = 'core/jquery.ui.effects.' . $value;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+/**
+ * Implements hook_mail().
+ *
+ * @param $key
+ * @param $message
+ * @param $params
+ */
+function mynotify_mail($key, &$message, $params) {
+  $token_service = \Drupal::token();
+  $mail_config = \Drupal::config('mynotify.mail');
+  $variables = ['mynotify' => $params['mynotify']];
+  $message['from'] = \Drupal::config('system.site')->get('mail');
+  $message['subject'] .= PlainTextOutput::renderFromHtml($token_service->replace($mail_config->get($key . '.subject'), $variables));
+  $message['body'][] = $token_service->replace($mail_config->get($key . '.body'), $variables);
+  /*
+  switch ($key) {
+      case 'mynotify_add_to_admin':
+          $message['subject'] = $params['subject'];
+          $message['body'][] = SafeMarkup::checkPlain($params['body']);
+          break;
+  }
+  */
+}
+
+
+/**
+ * Implements hook_commerce_product_update().
+ *
+ * @param \Drupal\commerce_product\Entity\Product $product
+ */
+function mynotify_commerce_product_update(Product $product) {
+  $product_variations = $product->getVariations();
+  $product_variation = $product_variations[0];
+  $qty = $product_variation->field_qty->getValue();
+  if (isset($qty[0]['value']) && $qty[0]['value'] > 0) {
+    /**  @var $mynotify_storage \Drupal\mynotify\MynotifyStorageInterface */
+    $mynotify_storage = \Drupal::entityTypeManager()->getStorage('mynotify');
+    $mynotifies = $mynotify_storage->getMynotifiesNotNotifiedByProductId($product->id());
+    if (!empty($mynotifies)) {
+      /* @var \Drupal\Core\Config\ImmutableConfig $mail_config */
+      $mail_config = \Drupal::config('mynotify.mail');
+      /* @var \Drupal\Core\Config\ImmutableConfig $myapi_config */
+      $myapi_config = $this->config('myapi.settings');
+
+      /* @var \Drupal\mynotify\Entity\Mynotify $mynotify */
+      $mynotify = reset($mynotifies);
+      $module = 'mynotify';
+      $key = 'mynotify_notified_add_to_admin';
+      $to = $myapi_config->get('mail_to');
+      $params['body'] = $mail_config->get('mynotify_notified_add_to_admin.body');
+      $params['subject'] = $mail_config->get('mynotify_notified_add_to_admin.subject');
+      $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+      $params['mynotify'] = $mynotify;
+      \Drupal::service('plugin.manager.mail')
+        ->mail($module, $key, $to, $langcode, $params);
+
+      $mails = [];
+      foreach ($mynotifies as $mynotify) {
+        $mail = $mynotify->getMail();
+        $mails[$mail] = $mail;
+        $mynotify->setNotified(TRUE);
+        $mynotify->save();
+        $module = 'mynotify';
+        $key = 'mynotify_notified_add_to_client';
+        $to = implode(',', $mails);
+        $params['body'] = $mail_config->get('mynotify_notified_add_to_client.body');
+        $params['subject'] = $mail_config->get('mynotify_notified_add_to_client.subject');
+        $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+        $params['mynotify'] = $mynotify;
+        \Drupal::service('plugin.manager.mail')
+          ->mail($module, $key, $to, $langcode, $params);
+      }
+    }
+  }
+
+}
+
+
+/**
+ * Implements hook_commerce_product_delete().
+ *
+ * @param \Drupal\commerce_product\Entity\Product $product
+ */
+function mynotify_commerce_product_delete(Product $product) {
+  /** @var \Drupal\mynotify\MynotifyStorageInterface $mynotify_storage */
+  $mynotify_storage = \Drupal::entityTypeManager()->getStorage('mynotify');
+  $mynotifies = $mynotify_storage->loadByProperties(['product_id' => $product->id()]);
+  /* @var \Drupal\mynotify\Entity\Mynotify[] $mynotifies */
+  foreach ($mynotifies as $mynotify) {
+    $mynotify->delete();
+  }
+}
+
+
+/**
+ * Implements hook_user_delete().
+ * @param \Drupal\user\Entity\User $account
+ */
+function mynotify_user_delete(User $account) {
+  /**  @var $mynotify_storage \Drupal\mynotify\MynotifyStorageInterface */
+  $mynotify_storage = \Drupal::entityTypeManager()->getStorage('mynotify');
+  $mynotifies = $mynotify_storage->loadByProperties(['uid' => $account->id()]);
+  /* @var \Drupal\mynotify\Entity\Mynotify[] $mynotifies */
+  foreach ($mynotifies as $mynotify) {
+    $mynotify->delete();
+  }
+}
+
+
+
+
+
+
+
+
+
+

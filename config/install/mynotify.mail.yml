@@ -1,0 +1,12 @@
+mynotify_add_to_admin:
+  subject: '[site:name] - нова подписка на уведомления о наличии товара'
+  body: "Пользователь [mynotify:name] (Email: [mynotify:mail]) хочет знать о доступности продукта:<br /> \r\n<a href=\"[mynotify:product:url:absolute]\">[mynotify:product:title]</a><br /> \r\nТелефон: [mynotify:phone]<br />\r\nДополнительная информация: [mynotify:text]"
+_core:
+  default_config_hash: NJC2fzMBO-QsauNEsWGZENWFDT18dvHB9MQF2u3TYB0
+langcode: ru
+mynotify_notified_add_to_client:
+  subject: '[site:name] - товар поступил на склад, Вы можете его купить'
+  body: '[mynotify:name], продукт <a href="[mynotify:product:url:absolute]">[mynotify:product:title]</a> поступил на склад, можно его купить!'
+mynotify_notified_add_to_admin:
+  subject: '[site:name] - уведомление о получении товара на склад'
+  body: "Продукт <a href=\"[mynotify:product:url:absolute]\">[mynotify:product:title]</a> поступил на склад.<br />\r\nСписок пользователей которые подавали запрос на его наличие:<br />\r\n[mynotify:mails-not-notified]\r\n"

@@ -1,0 +1,5 @@
+mynotify.mynotify_add:
+  route_name: mynotify.mynotify_add
+  title: 'Add mynotifies'
+  appears_on:
+    - entity.mynotify.collection
