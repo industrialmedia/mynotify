@@ -26,8 +26,22 @@ class MynotifyForm extends ContentEntityForm {
     }
     elseif ($operation == 'add_page') {
       $form['product_id']['#disabled'] = 'disabled';
-
     }
+
+    // Alter field label
+    $field_names = [
+      'name',
+      'mail',
+      'phone',
+      'text'
+    ];
+    foreach ($field_names as $field_name) {
+      $label = $this->config('mynotify.settings')->get('form.labels.' . $field_name);
+      if (!empty($label) && isset($form[$field_name])) {
+        $form[$field_name]['widget'][0]['value']['#title'] = $label;
+      }
+    }
+
     return $form;
   }
 

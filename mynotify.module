@@ -96,7 +96,7 @@ function mynotify_commerce_product_update(Product $product) {
       /* @var \Drupal\Core\Config\ImmutableConfig $mail_config */
       $mail_config = \Drupal::config('mynotify.mail');
       /* @var \Drupal\Core\Config\ImmutableConfig $myapi_config */
-      $myapi_config = $this->config('myapi.settings');
+      $myapi_config = \Drupal::config('myapi.settings');
 
       /* @var \Drupal\mynotify\Entity\Mynotify $mynotify */
       $mynotify = reset($mynotifies);

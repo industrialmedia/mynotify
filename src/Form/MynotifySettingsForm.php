@@ -32,6 +32,17 @@ class MynotifySettingsForm extends ConfigFormBase implements ContainerInjectionI
     ];
   }
 
+
+  protected function getFieldNames() {
+    return [
+      'name',
+      'mail',
+      'phone',
+      'text'
+    ];
+  }
+
+
   /**
    * {@inheritdoc}
    */
@@ -75,9 +86,27 @@ class MynotifySettingsForm extends ConfigFormBase implements ContainerInjectionI
       '#show_nested' => FALSE,
       '#weight' => 90,
     );
+
+    $form['form'] = [
+      '#type' => 'details',
+      '#title' => 'Форма',
+      '#group' => 'settings',
+      '#tree' => TRUE,
+    ];
+    $field_names = $this->getFieldNames();
+    foreach ($field_names as $field_name) {
+      $form['form']['labels'][$field_name] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Label for field:') . ' "' . $field_name . '"',
+        '#default_value' => $settings_config->get('form.labels.' . $field_name),
+        '#size' => 60,
+      ];
+    }
+
+
     $form['email'] = [
       '#type' => 'vertical_tabs',
-      '#title' => $this->t('Emails'),
+      '#title' => $this->t('Email settings'),
     ];
     // Письмо админу о новом запросе
     $form['mynotify_add_to_admin'] = [
@@ -189,8 +218,13 @@ class MynotifySettingsForm extends ConfigFormBase implements ContainerInjectionI
     $settings_config
       ->set('popup.dialog_options', $form_state->getValue('popup')['dialog_options'])
       ->set('popup.button_name', $form_state->getValue('popup')['button_name'])
-      ->set('popup.title', $form_state->getValue('popup')['title'])
-      ->save();
+      ->set('popup.title', $form_state->getValue('popup')['title']);
+    $field_names = $this->getFieldNames();
+    $labels = $form_state->getValue('form')['labels'];
+    foreach ($field_names as $field_name) {
+      $settings_config->set('form.labels.' . $field_name, $labels[$field_name]);
+    }
+    $settings_config->save();
     parent::submitForm($form, $form_state);
   }
 
