@@ -1,3 +1,5 @@
+load_popup:
+  addtocart: 1
 popup:
   width: '550'
   button_name: Предзаказ

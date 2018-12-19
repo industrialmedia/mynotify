@@ -7,7 +7,7 @@ use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\user\Entity\User;
-
+use Drupal\commerce_product\Entity\ProductVariationInterface;
 
 /**
  * Implements hook_form_alter().
@@ -18,33 +18,44 @@ use Drupal\user\Entity\User;
  */
 function mynotify_form_alter(&$form, FormStateInterface &$form_state, $form_id) {
   if ($form_state->getBuildInfo()['callback_object'] instanceof AddToCartFormInterface) {
-    /* @var Product $product  */
-    $product = $form_state->getStorage()['product'];
-    $product_variations = $product->getVariations();
-    $product_variation = $product_variations[0];
-    $qty = $product_variation->field_qty->getValue();
-    if (!(isset($qty[0]['value']) && $qty[0]['value'] > 0)) {
-      $settings_config = \Drupal::config('mynotify.settings');
-      $form['actions']['submit'] = [
-        '#type' => 'link',
-        '#title' => $settings_config->get('popup.button_name'),
-        '#url' => Url::fromRoute('entity.mynotify.view', ['commerce_product' => $product->id()]),
-        '#options' => [
-          'attributes' => [
-            'class' => ['use-ajax'],
-            'data-dialog-type' => 'modal',
-            'data-dialog-options' => $settings_config->get('popup.dialog_options'),
-          ]
-        ],
-        '#attached' => ['library' => ['core/drupal.dialog.ajax']],
-      ];
-      $dialog_options = $settings_config->get('popup.dialog_options');
-      $dialog_options = Json::decode($dialog_options);
-      foreach ($dialog_options as $dialog_option_name => $dialog_option) {
-        if (in_array($dialog_option_name, ['show', 'hide'])) {
-          foreach ($dialog_option as $name => $value) {
-            if ($name == 'effect') {
-              $form['actions']['submit']['#attached']['library'][] = 'core/jquery.ui.effects.' . $value;
+    $config = Drupal::config('mynotify.settings');
+    if ($config->get('load_popup.addtocart')) {
+      /* @var Product $product */
+      $product = $form_state->getStorage()['product'];
+      $product_variations = $product->getVariations();
+      /* @var ProductVariationInterface $product_variation */
+      $product_variation = $product_variations[0];
+      $price = $product_variation->getPrice();
+
+      $is_availability = TRUE;
+      if (method_exists($product, 'isAvailability')) {
+        $is_availability = $product->isAvailability();
+      }
+      \Drupal::moduleHandler()->alter('mynotify_is_availability', $product, $is_availability);
+
+      if (!$is_availability || $price->isZero()) {
+        $settings_config = \Drupal::config('mynotify.settings');
+        $form['actions']['submit'] = [
+          '#type' => 'link',
+          '#title' => $settings_config->get('popup.button_name'),
+          '#url' => Url::fromRoute('entity.mynotify.view', ['commerce_product' => $product->id()]),
+          '#options' => [
+            'attributes' => [
+              'class' => ['use-ajax'],
+              'data-dialog-type' => 'modal',
+              'data-dialog-options' => $settings_config->get('popup.dialog_options'),
+            ]
+          ],
+          '#attached' => ['library' => ['core/drupal.dialog.ajax']],
+        ];
+        $dialog_options = $settings_config->get('popup.dialog_options');
+        $dialog_options = Json::decode($dialog_options);
+        foreach ($dialog_options as $dialog_option_name => $dialog_option) {
+          if (in_array($dialog_option_name, ['show', 'hide'])) {
+            foreach ($dialog_option as $name => $value) {
+              if ($name == 'effect') {
+                $form['actions']['submit']['#attached']['library'][] = 'core/jquery.ui.effects.' . $value;
+              }
             }
           }
         }
@@ -85,10 +96,14 @@ function mynotify_mail($key, &$message, $params) {
  * @param \Drupal\commerce_product\Entity\Product $product
  */
 function mynotify_commerce_product_update(Product $product) {
-  $product_variations = $product->getVariations();
-  $product_variation = $product_variations[0];
-  $qty = $product_variation->field_qty->getValue();
-  if (isset($qty[0]['value']) && $qty[0]['value'] > 0) {
+  
+  $is_availability = FALSE;
+  if (method_exists($product, 'isAvailability')) {
+    $is_availability = $product->isAvailability();
+  }
+  \Drupal::moduleHandler()->alter('mynotify_is_availability', $product, $is_availability);
+
+  if ($is_availability) {
     /**  @var $mynotify_storage \Drupal\mynotify\MynotifyStorageInterface */
     $mynotify_storage = \Drupal::entityTypeManager()->getStorage('mynotify');
     $mynotifies = $mynotify_storage->getMynotifiesNotNotifiedByProductId($product->id());

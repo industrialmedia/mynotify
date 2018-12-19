@@ -19,7 +19,7 @@ class MynotifySettingsForm extends ConfigFormBase implements ContainerInjectionI
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'mynotify_settings';
+    return 'mynotify_settings_form';
   }
 
   /**
@@ -53,6 +53,20 @@ class MynotifySettingsForm extends ConfigFormBase implements ContainerInjectionI
       '#type' => 'vertical_tabs',
       '#title' => $this->t('Settings'),
     ];
+    // Вызов попап формы
+    $form['load_popup'] = [
+      '#type' => 'details',
+      '#title' => 'Вызов попап-формы',
+      '#group' => 'settings',
+      '#tree' => TRUE,
+    ];
+    $form['load_popup']['addtocart'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Replace button add to cart'),
+      '#default_value' => $settings_config->get('load_popup.addtocart'),
+      '#description' => $this->t('If the item is out of stock or the price is zero, replace the add to cart button with the pre-order button.'),
+    ];
+
     // Письмо админу о новом запросе
     $form['popup'] = [
       '#type' => 'details',
@@ -86,7 +100,7 @@ class MynotifySettingsForm extends ConfigFormBase implements ContainerInjectionI
       '#show_nested' => FALSE,
       '#weight' => 90,
     );
-
+    // Форма
     $form['form'] = [
       '#type' => 'details',
       '#title' => 'Форма',
@@ -208,14 +222,17 @@ class MynotifySettingsForm extends ConfigFormBase implements ContainerInjectionI
     $mail_config = $this->config('mynotify.mail');
     $mail_config
       ->set('mynotify_add_to_admin.subject', $form_state->getValue('mynotify_add_to_admin_subject'))
-      ->set('mynotify_add_to_admin.body', $form_state->getValue('mynotify_add_to_admin_body'))
+      ->set('mynotify_add_to_admin.body', $form_state->getValue('mynotify_add_to_admin_body'));
+    $mail_config
       ->set('mynotify_notified_add_to_client.subject', $form_state->getValue('mynotify_notified_add_to_client_subject'))
       ->set('mynotify_notified_add_to_client.body', $form_state->getValue('mynotify_notified_add_to_client_body'))
       ->set('mynotify_notified_add_to_admin.subject', $form_state->getValue('mynotify_notified_add_to_admin_subject'))
-      ->set('mynotify_notified_add_to_admin.body', $form_state->getValue('mynotify_notified_add_to_admin_body'))
-      ->save();
+      ->set('mynotify_notified_add_to_admin.body', $form_state->getValue('mynotify_notified_add_to_admin_body'));
+    $mail_config->save();
+
     $settings_config = $this->config('mynotify.settings');
     $settings_config
+      ->set('load_popup.addtocart', $form_state->getValue('load_popup')['addtocart'])
       ->set('popup.dialog_options', $form_state->getValue('popup')['dialog_options'])
       ->set('popup.button_name', $form_state->getValue('popup')['button_name'])
       ->set('popup.title', $form_state->getValue('popup')['title']);
