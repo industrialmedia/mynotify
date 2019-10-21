@@ -4,3 +4,10 @@ popup:
   width: '550'
   button_name: Предзаказ
   title: 'Сообщить о появлении товара "[commerce_product:title]" на складе'
+form:
+  labels:
+    name: Имя
+    mail: Почта
+    phone: Телефон
+    text: Сообщение
+    submit: Сообщить

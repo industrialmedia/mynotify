@@ -38,7 +38,8 @@ class MynotifySettingsForm extends ConfigFormBase implements ContainerInjectionI
       'name',
       'mail',
       'phone',
-      'text'
+      'text',
+      'submit',
     ];
   }
 

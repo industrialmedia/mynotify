@@ -36,10 +36,16 @@ class MynotifyForm extends ContentEntityForm {
       'text'
     ];
     foreach ($field_names as $field_name) {
-      $label = $this->config('mynotify.settings')->get('form.labels.' . $field_name);
+      $label = $this->config('mynotify.settings')
+        ->get('form.labels.' . $field_name);
       if (!empty($label) && isset($form[$field_name])) {
         $form[$field_name]['widget'][0]['value']['#title'] = $label;
       }
+    }
+    $form['actions']['submit']['#value'] = $this->t('Submit');
+    $label = $this->config('mynotify.settings')->get('form.labels.submit');
+    if (!empty($label)) {
+      $form['actions']['submit']['#value'] = $label;
     }
 
     return $form;
