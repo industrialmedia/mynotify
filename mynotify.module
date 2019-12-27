@@ -3,6 +3,7 @@
 use Drupal\Component\Render\PlainTextOutput;
 use Drupal\commerce_cart\Form\AddToCartFormInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
 use Drupal\commerce_product\Entity\Product;
@@ -31,7 +32,8 @@ function mynotify_form_alter(&$form, FormStateInterface &$form_state, $form_id) 
       if (method_exists($product, 'isAvailability')) {
         $is_availability = $product->isAvailability();
       }
-      \Drupal::moduleHandler()->alter('mynotify_is_availability', $product, $is_availability);
+      \Drupal::moduleHandler()
+        ->alter('mynotify_is_availability', $product, $is_availability);
 
       if (!$is_availability || $price->isZero()) {
         $settings_config = \Drupal::config('mynotify.settings');
@@ -76,9 +78,15 @@ function mynotify_mail($key, &$message, $params) {
   $token_service = \Drupal::token();
   $mail_config = \Drupal::config('mynotify.mail');
   $variables = ['mynotify' => $params['mynotify']];
+  $message['headers']['Content-Type'] = SWIFTMAILER_FORMAT_HTML;
   $message['from'] = \Drupal::config('system.site')->get('mail');
   $message['subject'] .= PlainTextOutput::renderFromHtml($token_service->replace($mail_config->get($key . '.subject'), $variables));
-  $message['body'][] = $token_service->replace($mail_config->get($key . '.body'), $variables);
+
+  $text[] = $token_service->replace($mail_config->get($key . '.body'), $variables);
+  $message['body'] = array_map(function ($text) {
+    return Markup::create($text);
+  }, $text);
+
   /*
   switch ($key) {
       case 'mynotify_add_to_admin':
@@ -96,12 +104,13 @@ function mynotify_mail($key, &$message, $params) {
  * @param \Drupal\commerce_product\Entity\Product $product
  */
 function mynotify_commerce_product_update(Product $product) {
-  
+
   $is_availability = FALSE;
   if (method_exists($product, 'isAvailability')) {
     $is_availability = $product->isAvailability();
   }
-  \Drupal::moduleHandler()->alter('mynotify_is_availability', $product, $is_availability);
+  \Drupal::moduleHandler()
+    ->alter('mynotify_is_availability', $product, $is_availability);
 
   if ($is_availability) {
     /**  @var $mynotify_storage \Drupal\mynotify\MynotifyStorageInterface */

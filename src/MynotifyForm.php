@@ -42,6 +42,16 @@ class MynotifyForm extends ContentEntityForm {
         $form[$field_name]['widget'][0]['value']['#title'] = $label;
       }
     }
+
+    // Add default value
+    if ($operation == 'add_page') {
+      $current_user = $this->currentUser();
+      if ($current_user->isAuthenticated()) {
+        $form['name']['widget'][0]['value']['#default_value'] = $current_user->getDisplayName();
+        $form['mail']['widget'][0]['value']['#default_value'] = $current_user->getEmail();
+      }
+    }
+    
     $form['actions']['submit']['#value'] = $this->t('Submit');
     $label = $this->config('mynotify.settings')->get('form.labels.submit');
     if (!empty($label)) {

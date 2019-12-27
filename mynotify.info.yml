@@ -8,4 +8,5 @@ dependencies:
   - telephone
   - token
   - commerce
+  - swiftmailer
 
