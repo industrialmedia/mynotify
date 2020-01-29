@@ -33,6 +33,11 @@ class MynotifySettingsForm extends ConfigFormBase implements ContainerInjectionI
   }
 
 
+  /**
+   * Return fields names
+   *
+   * @return array
+   */
   protected function getFieldNames() {
     return [
       'name',
@@ -117,7 +122,12 @@ class MynotifySettingsForm extends ConfigFormBase implements ContainerInjectionI
         '#size' => 60,
       ];
     }
-
+    $form['form']['submitted_text'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Success submitted text'),
+      '#default_value' => $settings_config->get('form.submitted_text'),
+      '#rows' => 5,
+    ];
 
     $form['email'] = [
       '#type' => 'vertical_tabs',
@@ -242,6 +252,7 @@ class MynotifySettingsForm extends ConfigFormBase implements ContainerInjectionI
     foreach ($field_names as $field_name) {
       $settings_config->set('form.labels.' . $field_name, $labels[$field_name]);
     }
+    $settings_config->set('form.submitted_text', $form_state->getValue('form')['submitted_text']);
     $settings_config->save();
     parent::submitForm($form, $form_state);
   }

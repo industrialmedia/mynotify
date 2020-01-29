@@ -2,8 +2,12 @@
 
 namespace Drupal\mynotify;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\HtmlCommand;
+
 
 /**
  * Form controller for the mynotify entity edit forms.
@@ -51,15 +55,46 @@ class MynotifyForm extends ContentEntityForm {
         $form['mail']['widget'][0]['value']['#default_value'] = $current_user->getEmail();
       }
     }
-    
+
     $form['actions']['submit']['#value'] = $this->t('Submit');
     $label = $this->config('mynotify.settings')->get('form.labels.submit');
     if (!empty($label)) {
       $form['actions']['submit']['#value'] = $label;
     }
 
+    // ajaxSubmit
+    $form['#id'] = Html::getId($this->getFormId());
+    $form['actions']['submit']['#ajax'] = [
+      'callback' => '::ajaxSubmitCallback',
+      'wrapper' => $form['#id'],
+      'event' => 'click',
+      'progress' => [
+        'type' => 'throbber',
+      ],
+    ];
+
     return $form;
   }
+
+
+  /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   * @return array
+   */
+  public function ajaxSubmitCallback(array &$form, FormStateInterface $form_state) {
+    if ($form_state->hasAnyErrors()) {
+      unset($form['#prefix']);
+      unset($form['#suffix']);
+      return $form;
+    }
+    $submitted_text = $this->config('mynotify.settings')
+      ->get('form.submitted_text');
+    return [
+      '#markup' => '<div class="form-submitted-text">' . $submitted_text . '</div>'
+    ];
+  }
+
 
   /**
    * {@inheritdoc}

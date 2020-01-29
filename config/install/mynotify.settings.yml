@@ -11,3 +11,4 @@ form:
     phone: Телефон
     text: Сообщение
     submit: Сообщить
+  submitted_text: 'Ваше сообщение отправлено.'
