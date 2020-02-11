@@ -191,6 +191,16 @@ function mynotify_user_delete(User $account) {
 
 
 
+/**
+ * Implements hook_theme().
+ */
+function mynotify_theme() {
+  return [
+    'mynotify_form' => [
+      'render element' => 'form',
+    ],
+  ];
+}
 
 
 
